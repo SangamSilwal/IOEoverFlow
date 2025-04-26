@@ -43,9 +43,6 @@ const userSchema = new Schema({
             message: `{value} is not a valid IOE-affiliated college name. Supported colleges are ${ioeCollegeValues.join(', ')}`,
         }
     },
-    year: {
-        type: Number,
-    },
     departMent: {
         type: String,
         required: true,
@@ -60,7 +57,7 @@ const userSchema = new Schema({
     },
     profilePicUrl: {
         type: String,
-        default:""
+        default:"https://res.cloudinary.com/dc7xpzhax/image/upload/v1745648506/default_qsjqzc.png"
     },
     content: [{
         type: Schema.Types.ObjectId,

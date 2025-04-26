@@ -1,0 +1,93 @@
+import { User } from "../models/user.model.js";
+import { Content } from "../models/content.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import {ApiResponse} from "../utils/ApiResponse.js";
+import {asyncHandler} from "../utils/asyncHandler.js";
+import {uploadOnCloudinary} from "../utils/cloudinaryFile.js"
+import fs from "fs"
+
+
+const registerUser = asyncHandler(async (req,res) => {
+    const {
+        name,
+        email,
+        username,
+        password,
+        biostatus,
+        collegeName,
+        departMent
+    } = req.body
+
+    if(
+        [name,email,username,password,collegeName,departMent].some((field) => field?.trim() === "")
+    )
+    {
+        throw new ApiError(400,"Some Fields are Missing")
+    }
+
+    const existedUserCheck = await User.findOne({
+        $or: [{username},{email}]
+    })
+
+    if(existedUserCheck)
+    {
+        throw new ApiError(409,"User with email or username already exists")
+    }
+
+    let profilePicUrl;
+
+    if(req.files && Array.isArray(req.files.profilePic) && req.files.profilePic.length >0)
+    {
+        const localprofilePicPath = req.files?.profilePic[0].path;
+        const cloudinaryResponse = await uploadOnCloudinary(localprofilePicPath);
+        if(!cloudinaryResponse?.url)
+        {
+            throw new ApiError(500,"Failed to upload on cloudinary")
+        }
+
+        profilePicUrl = cloudinaryResponse.url;
+        console.log(profilePicUrl)
+        console.log(localprofilePicPath)
+        fs.unlinkSync(`${localprofilePicPath}`);
+    }
+    else{
+        profilePicUrl = "https://res.cloudinary.com/dc7xpzhax/image/upload/v1745648506/default_qsjqzc.png"
+    }
+
+
+
+    let ExistedUser;
+    try {
+        const user = await User.create({
+            name,
+            username,
+            email,
+            password,
+            biostatus:biostatus || "",
+            collegeName,
+            departMent,
+            profilePicUrl:profilePicUrl
+        })
+        ExistedUser = await User.findById(user._id).select("-refreshToken -password").lean()
+    } catch (error) {
+        if(error === "ValidationError")
+        {
+            throw new ApiError(400,"Invalid collegeName or Department")
+        }
+        throw new ApiError(500,error.message || "Something went Wront While Registering the user")
+    }
+    console.log(ExistedUser)
+    if(!ExistedUser)
+    {
+        throw new ApiError(500, "Erorr in Registering the user")
+    }
+
+    return res.status(201).json(
+        new ApiResponse(201,ExistedUser,"User Created Succesfully")
+    )
+})
+
+
+export {
+    registerUser,
+}
