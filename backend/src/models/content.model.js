@@ -7,9 +7,11 @@ const contentSchema = new Schema({
     description:{
         type:String
     },
-    fileAttach:{
-        type:String
-    },
+    fileAttach:[
+        {
+            type: String
+        }
+    ],
     author:{
         type:Schema.Types.ObjectId,
         ref:"User"

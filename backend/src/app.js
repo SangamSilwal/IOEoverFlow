@@ -18,8 +18,9 @@ app.use(cookieParser())
 
 
 import userRoutes from "./routes/user.route.js"
+import contentRoute from "./routes/content.route.js"
 
 app.use("/api/v1/users",userRoutes)
-
+app.use("/api/v1/posts",contentRoute)
 
 export {app}
