@@ -56,7 +56,40 @@ const deletePost = asyncHandler(async (req, res) => {
     return res.status(201).json(new ApiResponse(201,{},"Deleted Succesfully"))
 })
 
+const commentPost = asyncHandler(async (req,res) => {
+    if(!req.user)
+    {
+        throw new ApiError(401,"Need to login or register for posting comment")
+    }
+    try {
+        const contentId = req.params.contentId;
+        const {text} =req.body;
+        if(!text)
+        {
+            throw new ApiError(400,"Cannot comment empty string");
+        }
+        await Content.findByIdAndUpdate(
+            contentId,
+            {
+                comments: [
+                    {user: req.user,
+                    text:text
+                }
+                ]
+            }
+        )
+        return res.status(201).json(new ApiResponse(201,{},"Posted successfully"))
+    } catch (error) {
+        console.log(error)
+        throw new ApiError(500,"Error occur while commenting on the post")
+    }
+})
+
+
+
+
 export {
     createPost,
-    deletePost
+    deletePost,
+    commentPost
 }
