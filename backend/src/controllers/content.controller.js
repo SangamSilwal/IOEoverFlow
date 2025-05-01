@@ -68,28 +68,67 @@ const commentPost = asyncHandler(async (req,res) => {
         {
             throw new ApiError(400,"Cannot comment empty string");
         }
-        await Content.findByIdAndUpdate(
+        const updatedContent = await Content.findByIdAndUpdate(
             contentId,
             {
-                comments: [
-                    {user: req.user,
-                    text:text
+                $push:{
+                    comments: {
+                        user: req.user,
+                        text:text
+                    }
                 }
-                ]
             }
         )
-        return res.status(201).json(new ApiResponse(201,{},"Posted successfully"))
+        return res.status(201).json(new ApiResponse(201,{updatedContent},"Posted successfully"))
     } catch (error) {
         console.log(error)
         throw new ApiError(500,"Error occur while commenting on the post")
     }
 })
 
+const replyUser = asyncHandler(async(req,res) => {
+    if(!req.user)
+    {
+        throw new ApiError(401,"Need to login or reguster for giving replies")
+    }
+
+    try {
+        const {contentId,commentId}= req.params;
+        const {replyText} =req.body;
+        if(!replyText)
+        {
+            throw new ApiError(400,"Cannot reply empty string");
+        }
+        const content = await Content.findById(contentId);
+        console.log(content)
+        console.log(contentId,"-->contentId")
+        console.log(commentId,"--->commentId")
+        const comment = await content.comments.id(commentId);
+        if(!comment)
+        {
+            throw new ApiError(404,"Comment donot exists")
+        }
+        comment.replies.push({
+            user: req.user,
+            text:replyText
+        });
+        await content.save();
+
+        const updatedContent = await Content.findById(contentId).populate('author comments.user comments.replies.user')
+        return res.status(201).json( new ApiResponse(201,{updatedContent},"Reply added Succesfully"))
+        
+
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(500,"Error While giving reply")
+    }
+})
 
 
 
 export {
     createPost,
     deletePost,
-    commentPost
+    commentPost,
+    replyUser
 }

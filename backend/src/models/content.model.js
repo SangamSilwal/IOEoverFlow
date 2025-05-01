@@ -24,10 +24,12 @@ const contentSchema = new Schema({
     ],
     comments:[
         {
+            _id: {type: Schema.Types.ObjectId,default:() => new mongoose.Types.ObjectId()},
             user:{type:Schema.Types.ObjectId,ref:"User"},
             text:String,
             replies:[
                 {
+                    _id: {type: Schema.Types.ObjectId,default:() => new mongoose.Types.ObjectId()},
                     user:{type:Schema.Types.ObjectId,ref:"User"},
                     text:String,
                     createdAt:{type:Date,default:Date.now} 
