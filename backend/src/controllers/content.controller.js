@@ -56,6 +56,30 @@ const deletePost = asyncHandler(async (req, res) => {
     return res.status(201).json(new ApiResponse(201,{},"Deleted Succesfully"))
 })
 
+const editPost = asyncHandler(async (req,res) => {
+    try {
+        const {title,description} = req.body || {};
+        console.log(description)
+        const content = req.content;
+        const updatedContent = await Content.findByIdAndUpdate(
+            content._id,
+            {
+                $set:{
+                    title:title || content.title,
+                    description:description || content.description
+                }
+            },
+            {
+                new:true
+            }
+        )
+        return res.status(200).json(new ApiResponse(200,{updatedContent},"Post Updated Succesfully"))
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(500,"Error While Editing the post")
+    }
+})
+
 const commentPost = asyncHandler(async (req,res) => {
     if(!req.user)
     {
@@ -130,5 +154,6 @@ export {
     createPost,
     deletePost,
     commentPost,
-    replyUser
+    replyUser,
+    editPost
 }
