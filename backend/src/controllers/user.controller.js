@@ -1,5 +1,4 @@
 import { User } from "../models/user.model.js";
-import { Content } from "../models/content.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
 import {asyncHandler} from "../utils/asyncHandler.js";
@@ -166,8 +165,74 @@ const logoutUser = asyncHandler(async (req,res) => {
     .clearCookie("refreshToken",options)
     .json(new ApiResponse(200,{},"Logout SuccessFully"))
 })
+
+const sendFriendRequest = asyncHandler(async (req,res)=> {
+    try {
+        if(!req.user)
+        {
+            throw new ApiError(400,"First You need to login or register")
+        }
+        const user = req.user
+        const {userId} = req.params;
+        if(user._id.toString() === userId)
+        {
+            throw new ApiError(400,"Cannot send Request to yourself")
+        }
+        const friendUser = await User.findById(userId);
+        if(!friendUser)
+        {
+            throw new ApiError(404,"The Person Doesnot Exists");
+        }
+        if(user.sentRequest.includes(friendUser._id))
+        {
+            throw new ApiError(400,"You have already send request to the user")
+        }
+        if(user.friends.includes(friendUser._id))
+        {
+            throw new ApiError(400,"This person is already your friend");
+        }
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id,
+            {
+                $push:{
+                    sentRequest:friendUser._id
+                }
+            },
+            {
+                new:true
+            }
+        )
+        const updatedFriendUser = await User.findByIdAndUpdate(
+            friendUser._id,
+            {
+                $push:{
+                    friendRequest:user._id
+                }
+            },
+            {
+                new:true
+            }
+        )
+        if(!updatedUser && !updatedFriendUser)
+        {
+            throw new ApiError(500,"Failed To sent request to the person")
+        }
+        res.status(201).json(new ApiResponse(201,{updatedUser},"Friend Request Send Successfull"))
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(500,"Error Occured While sending request to the user")
+    }
+})
+
+
+
+
+
+
+
 export {
     registerUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    sendFriendRequest
 }
