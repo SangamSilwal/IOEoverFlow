@@ -43,7 +43,6 @@ const createPost = asyncHandler(async (req, res) => {
         .json(new ApiResponse(201, { content }, "post created Succesfully"))
 
 })
-
 const deletePost = asyncHandler(async (req, res) => {
     await Content.findByIdAndDelete(req.content._id);
     await User.findByIdAndUpdate(
@@ -55,7 +54,6 @@ const deletePost = asyncHandler(async (req, res) => {
     )
     return res.status(201).json(new ApiResponse(201,{},"Deleted Succesfully"))
 })
-
 const editPost = asyncHandler(async (req,res) => {
     try {
         const {title,description} = req.body || {};
@@ -79,7 +77,6 @@ const editPost = asyncHandler(async (req,res) => {
         throw new ApiError(500,"Error While Editing the post")
     }
 })
-
 const commentPost = asyncHandler(async (req,res) => {
     if(!req.user)
     {
@@ -112,7 +109,6 @@ const commentPost = asyncHandler(async (req,res) => {
         throw new ApiError(500,"Error occur while commenting on the post")
     }
 })
-
 const replyUser = asyncHandler(async(req,res) => {
     if(!req.user)
     {
