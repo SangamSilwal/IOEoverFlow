@@ -7,7 +7,7 @@ export const verifyContentOwner = asyncHandler(async (req,res,next) => {
     const contentId = req.params.contentId;
     try {
         const content = await Content.findById(contentId).populate("author")
-        console.log(content)
+        
         if(!content)
         {
             throw new ApiError(404,"Post Not found")

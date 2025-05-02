@@ -101,6 +101,9 @@ const commentPost = asyncHandler(async (req,res) => {
                         text:text
                     }
                 }
+            },
+            {
+                new:true
             }
         )
         return res.status(201).json(new ApiResponse(201,{updatedContent},"Posted successfully"))
@@ -124,9 +127,6 @@ const replyUser = asyncHandler(async(req,res) => {
             throw new ApiError(400,"Cannot reply empty string");
         }
         const content = await Content.findById(contentId);
-        console.log(content)
-        console.log(contentId,"-->contentId")
-        console.log(commentId,"--->commentId")
         const comment = await content.comments.id(commentId);
         if(!comment)
         {
@@ -147,7 +147,34 @@ const replyUser = asyncHandler(async(req,res) => {
         throw new ApiError(500,"Error While giving reply")
     }
 })
-
+const editComment = asyncHandler(async(req,res)=>{
+    try {
+        const {updatedComment} = req.body;
+        const comment= req.comment;
+        const content = req.content;
+        comment.text = updatedComment;
+        await content.save();
+        const updatedContent = await Content.findById(content._id);
+        res.status(201).json(new ApiResponse(201,{updatedContent},"Comment Edited Succesfully"))
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(500,"Error while Editing the comment")
+    }
+})
+const editReply = asyncHandler(async(req,res) => {
+    try {
+        const {updatedReply} = req.body;
+        const content = req.content;
+        const reply = req.reply;
+        reply.text = updatedReply;
+        await content.save();
+        const updatedContent = await Content.findById(content._id);
+        res.status(201).json(new ApiResponse(201,{updatedContent},"reply edited succesfully"))
+    } catch (error) {
+        console.log(error)
+        throw new ApiError(500,"Error while Editing the reply")
+    }
+})
 
 
 export {
@@ -155,5 +182,7 @@ export {
     deletePost,
     commentPost,
     replyUser,
-    editPost
+    editPost,
+    editComment,
+    editReply
 }
