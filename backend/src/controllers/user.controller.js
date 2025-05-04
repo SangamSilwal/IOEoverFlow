@@ -115,7 +115,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true,
+        secure: false,
     }
     req.user = loggedInUser
 
@@ -207,6 +207,52 @@ const sendFriendRequest = asyncHandler(async (req, res) => {
     } catch (error) {
         console.log(error);
         throw new ApiError(500, "Error Occured While sending request to the user")
+    }
+})
+
+const cancelFriendRequest = asyncHandler(async(req,res) => {
+    if(!req.user)
+    {
+        throw new ApiError(401,"unauthorized access")
+    }
+    const user = req.user;
+    const {userId} = req.params;
+    const friendUser = await User.findById(userId);
+    if(!friendUser)
+    {
+        throw new ApiError(400,"The user doesNot exists")
+    }
+    if(!user.sendFriendRequest.includes(friendUser._id) && !friendUser.friendRequest.includes(user._id))
+    {
+        throw new ApiError(400,"You havenot sent request to that user")
+    }
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id,
+            {
+                $pull:{
+                    sentRequest:friendUser._id
+                }
+            },
+            {
+                new:true
+            }
+        )
+        const updatedFriend = await User.findByIdAndUpdate(
+            friendUser._id,
+            {
+                $pull:{
+                    friendRequest:user._id
+                }
+            },
+            {
+                new:true
+            }
+        )
+        return res.status(200).json(new ApiResponse(200,{updatedUser},"Request Cancelled Succesfully"))
+    } catch (error) {
+        console.log(error)
+        throw new ApiError(500,"Error while cancelling the friend Request")
     }
 })
 
@@ -312,9 +358,51 @@ const denyFriendRequest = asyncHandler(async (req, res) => {
     }
 })
 
-
-
-
+const removeFriend = asyncHandler(async(req,res)=>{
+    if(!req.user)
+    {
+        throw new ApiError(401,"Unauthorized access")
+    }
+    const user = req.user;
+    const {userId} = req.params;
+    const friendUser = await User.findById(userId);
+    if(!friendUser)
+    {
+        throw new ApiError(400,"The user does not Exists")
+    }
+    if(!user.friends.includes(friendUser._id) && !friendUser.friends.includes(user._id))
+    {
+        throw new ApiError(401,"The user is not your friend")
+    }
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id,
+            {
+                $pull:{
+                    friends:friendUser._id
+                }
+            },
+            {
+                new:true
+            }
+        )
+        const updatedFriend = await User.findByIdAndUpdate(
+            friendUser._id,
+            {
+                $pull:{
+                    friends:user._id
+                }
+            },
+            {
+                new:true
+            }
+        )
+        return res.status(200).json(new ApiResponse(200,{updatedUser},"Friend Removed Succesfully"))
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(500,"Failed to remove the friend from your friend's list")
+    }
+})
 
 export {
     registerUser,
@@ -322,5 +410,7 @@ export {
     logoutUser,
     sendFriendRequest,
     acceptFriendRequest,
-    denyFriendRequest
+    denyFriendRequest,
+    cancelFriendRequest,
+    removeFriend
 }
