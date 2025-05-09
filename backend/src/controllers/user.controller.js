@@ -81,7 +81,7 @@ const registerUser = asyncHandler(async (req, res) => {
         if (error === "ValidationError") {
             throw new ApiError(400, "Invalid collegeName or Department")
         }
-        throw new ApiError(500, error.message || "Something went Wront While Registering the user")
+        throw new ApiError(500, `Haye Error : ${error.message}` || "Something went Wront While Registering the user")
     }
     console.log(ExistedUser)
     if (!ExistedUser) {
